@@ -1,8 +1,8 @@
-from bot import Bot
+
 
 def main():
-    bot = Bot()
-    bot.polling()
+    print("hello")
+
 
 if __name__ == '__main__':
     main()
