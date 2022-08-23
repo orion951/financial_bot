@@ -1,2 +1,3 @@
-from entity.Bill import Bill
-from entity.Expenses import Expenses
+from entity.Bill import BillProcess
+from database.Postgres import Postgres
+from entity import EntityFabrica

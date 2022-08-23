@@ -1,14 +1,11 @@
 from entity.Entity import EntityProcess
-from database.Postgres import Postgres
-from common_obj import bot
-from processes.Bill.create_bill import create_fsm_bill
+from processes.Users.create_user import create_fsm_user
 
 
-class BillProcess(EntityProcess):
+class UserProcess(EntityProcess):
 
     async def create_process(self, message):
-
-        await create_fsm_bill(message)
+        await create_fsm_user(message)
 
     async def read_process(self):
         print('Show bill')
