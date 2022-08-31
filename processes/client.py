@@ -19,7 +19,7 @@ class FSMAction(StatesGroup):
 async def start_fsm_action(message: types.Message, user_name):
     
     await FSMAction.entity.set()
-    await bot.send_message(message.from_user.id, f'Привет, {user_name}! С чем будем работать?', reply_markup=kb_client)
+    await bot.send_message(message.from_user.id, f'{user_name}, с чем будем работать?', reply_markup=kb_client)
 
 
 async def choose_entity(message: types.Message, state: FSMContext):
@@ -36,7 +36,6 @@ async def choose_action(message: types.Message, state: FSMAction):
     await state.finish()
 
     await EntityFabrica.execute_process(message)
-    
 
 
 def reg_processes_client(dp:Dispatcher):

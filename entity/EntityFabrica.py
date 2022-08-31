@@ -22,7 +22,7 @@ class EntityFabrica():
         if message.text in 'Создать':
             await cls.object.create_process(message)
         elif message.text in 'Посмотреть':
-            await cls.object.read_process()
+            await cls.object.read_process(message)
         elif message.text in 'Изменить':
             await cls.object.update_process()
         elif message.text in 'Удалить':

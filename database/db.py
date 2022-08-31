@@ -1,11 +1,17 @@
 import os
 from typing import Dict, List, Tuple
+from loguru import logger
 
 
 def insert(table: str, column_values: Dict, cursor, conn):
+    logger.info(f'inserting values into {table}: {column_values}')
     columns = ', '.join( column_values.keys() )
-    values = [tuple(column_values.values())]
-    placeholders = ", ".join( "?" * len(column_values.keys()) )
+    values = tuple(column_values.values())
+
+    place = ['%s' for x in column_values.values() ]
+
+    placeholders = ", ".join(place)
+    logger.info(f'{columns} {values} {place} {placeholders}')
     cursor.execute(
         f"INSERT INTO {table} "
         f"({columns}) "

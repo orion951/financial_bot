@@ -17,7 +17,7 @@ class Postgres(object):
                 database=db_name
             )
             self.conn.autocommit = True
-            self.cursor = self.conn.cursor(cursor_factory=RealDictCursor)
+            self.cursor = self.conn.cursor()
         except:
             traceback.print_exc()
 

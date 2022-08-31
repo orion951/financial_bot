@@ -1,7 +1,7 @@
 from entity.Entity import EntityProcess
 from database.Postgres import Postgres
 from common_obj import bot
-from processes.Bill.create_bill import create_fsm_bill
+from processes.Bill import create_fsm_bill, read_fsm_bill
 
 
 class BillProcess(EntityProcess):
@@ -10,8 +10,9 @@ class BillProcess(EntityProcess):
 
         await create_fsm_bill(message)
 
-    async def read_process(self):
-        print('Show bill')
+    async def read_process(self, message):
+        
+        await read_fsm_bill(message)
 
     async def update_process(self):
         pass
