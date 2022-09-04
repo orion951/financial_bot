@@ -1,5 +1,6 @@
 from entity.Entity import EntityProcess
 
+
 class CategoryProcess(EntityProcess):
 
     async def create_process(self):

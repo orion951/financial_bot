@@ -1,12 +1,12 @@
-from xml.dom.minidom import Entity
-from entity.Bill import BillProcess
+from entity.Bill.BillProcess import BillProcess
 from entity.Acc_change import Acc_changeProcess
 from entity.Category import CategoryProcess
 from entity.Entity import EntityProcess
 
+
 class EntityFabrica():
 
-    object : EntityProcess
+    object: EntityProcess
 
     @classmethod
     async def create_object(cls, entity) -> EntityProcess:
@@ -24,6 +24,6 @@ class EntityFabrica():
         elif message.text in 'Посмотреть':
             await cls.object.read_process(message)
         elif message.text in 'Изменить':
-            await cls.object.update_process()
+            await cls.object.update_process(message)
         elif message.text in 'Удалить':
-            await cls.object.delete_process()
+            await cls.object.delete_process(message)

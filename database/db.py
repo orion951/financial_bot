@@ -1,14 +1,13 @@
-import os
 from typing import Dict, List, Tuple
 from loguru import logger
 
 
 def insert(table: str, column_values: Dict, cursor, conn):
     logger.info(f'inserting values into {table}: {column_values}')
-    columns = ', '.join( column_values.keys() )
+    columns = ', '.join(column_values.keys())
     values = tuple(column_values.values())
 
-    place = ['%s' for x in column_values.values() ]
+    place = ['%s' for x in column_values.values()]
 
     placeholders = ", ".join(place)
     logger.info(f'{columns} {values} {place} {placeholders}')
@@ -32,6 +31,6 @@ def fetchall(table: str, columns: List[str], cursor, conn) -> List[Tuple]:
     return result
 
 
-def delete(table: str, row_id: int,cursor, conn) -> None:
-    row_id = int(row_id)
-    cursor.execute(f"delete from {table} where id={row_id}")
+# def delete(table: str, row_id: int,cursor, conn) -> None:
+#     row_id = int(row_id)
+#     cursor.execute(f"delete from {table} where id={row_id}")

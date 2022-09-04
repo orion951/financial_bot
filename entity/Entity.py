@@ -18,6 +18,3 @@ class EntityProcess(ABC):
     @abstractmethod
     def delete_process():
         pass
-
-    
-

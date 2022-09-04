@@ -1,6 +1,6 @@
 import psycopg2
 import traceback
-from psycopg2.extras import RealDictCursor
+from psycopg2.extras import DictCursor
 from config import host, user, password, db_name
 
 
@@ -17,8 +17,8 @@ class Postgres(object):
                 database=db_name
             )
             self.conn.autocommit = True
-            self.cursor = self.conn.cursor()
-        except:
+            self.cursor = self.conn.cursor(cursor_factory=DictCursor)
+        except Exception:
             traceback.print_exc()
 
     def __enter__(self, *args, **kwargs):
@@ -30,6 +30,6 @@ class Postgres(object):
             try:
                 obj = getattr(self, c)
                 obj.close()
-            except:
+            except Exception:
                 traceback.print_exc()
         self.args, self.dbName = None, None

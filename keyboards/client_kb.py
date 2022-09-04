@@ -15,7 +15,8 @@ but_report = KeyboardButton('Отчет')
 
 kb_client = ReplyKeyboardMarkup(resize_keyboard=True)
 
-kb_client.row(but_expenses, but_income).row(but_bills, but_kategories, but_report)
+kb_client.row(but_expenses, but_income)\
+         .row(but_bills, but_kategories, but_report)
 
 # buttons at work with entity
 but_create = KeyboardButton('Создать')

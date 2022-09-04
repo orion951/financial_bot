@@ -1,5 +1,6 @@
 from entity.Entity import EntityProcess
 
+
 class Acc_changeProcess(EntityProcess):
 
     async def create_process(self):

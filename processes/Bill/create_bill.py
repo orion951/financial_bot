@@ -1,14 +1,13 @@
 from aiogram import types, Dispatcher
 
-from loguru import logger
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from common_obj import bot
-from keyboards import kb_close_question
 from database import Postgres, db
-from processes import client, common_handlers
+from processes import common_handlers
 from keyboards import common_kb
+from entity.Bill.Bill import Bill
 
 
 class FSMCreationBill(StatesGroup):
@@ -19,7 +18,9 @@ class FSMCreationBill(StatesGroup):
 
 async def create_fsm_bill(message: types.Message):
     await FSMCreationBill.bill_name.set()
-    await bot.send_message(message.from_user.id, 'Название счета', reply_markup=common_kb.kb_cancel)
+    await bot.send_message(message.from_user.id,
+                           'Название счета',
+                           reply_markup=common_kb.kb_cancel)
 
 
 async def cancel_create(message: types.Message, state: FSMContext):
@@ -27,30 +28,22 @@ async def cancel_create(message: types.Message, state: FSMContext):
 
 
 async def write_name(message: types.Message, state: FSMContext):
-    with Postgres() as (con, cursor):
-        query = """ SELECT * FROM bill where user_id = %s ;"""
-        values = [message.from_user.id]
-        cursor.execute(query, values)
-        result = cursor.fetchall()
-    cancel = False
-    bill_id = 0
+    result = await Bill.write_name(message)
 
-    for row in result:
-        if bill_id < row[0]:
-            bill_id = row[0]
-        if row[1] == message.text:
-            cancel = True
-            await bot.send_message(message.from_user.id, 'Счёт с таким именем уже существует')
-            await state.finish()
-            await create_fsm_bill(message)
-
-    if cancel == False:
+    if result['cancel']:
+        await bot.send_message(message.from_user.id,
+                               'Счёт с таким именем уже существует')
+        await state.finish()
+        await create_fsm_bill(message)
+    else:
         async with state.proxy() as data:
             data['bill_name'] = message.text
-            data['bill_id'] = bill_id + 1
+            data['bill_id'] = result['bill_id'] + 1
         await FSMCreationBill.next()
 
-        await bot.send_message(message.from_user.id, 'Сколько денег на счете?', reply_markup=common_kb.kb_cancel)
+        await bot.send_message(message.from_user.id,
+                               'Сколько денег на счете?',
+                               reply_markup=common_kb.kb_cancel)
 
 
 async def write_accbalance(message: types.Message, state: FSMContext):
@@ -58,7 +51,9 @@ async def write_accbalance(message: types.Message, state: FSMContext):
         data['acc_balance'] = int(float(message.text) * 100)
     await FSMCreationBill.next()
 
-    await bot.send_message(message.from_user.id, 'Учитывать этот счёт в общем бюджете?', reply_markup=kb_close_question)
+    await bot.send_message(message.from_user.id,
+                           'Учитывать этот счёт в общем бюджете?',
+                           reply_markup=common_kb.kb_close_question)
 
 
 async def write_isnotcalc(message: types.Message, state: FSMContext):
@@ -69,27 +64,24 @@ async def write_isnotcalc(message: types.Message, state: FSMContext):
             data['is_not_calc'] = True
 
     with Postgres() as (conn, cursor):
-        db.insert('bill', {'bill_name': data['bill_name'], 
+        db.insert('bill', {'bill_name': data['bill_name'],
                            'bill_id': data['bill_id'],
                            'acc_balance': data['acc_balance'],
                            'is_not_calc': data['is_not_calc'],
-                           'user_id': message.from_user.id}, cursor=cursor, conn=conn)
-        # query = """ INSERT INTO bill (bill_name, bill_id, acc_balance, is_not_calc, user_id) VALUES (%s, %s, %s, %s, %s)"""
+                           'user_id': message.from_user.id},
+                  cursor=cursor, conn=conn)
 
-        # values = [x for x in data.values()]
-        # values.append(message.from_user.id)
-        # values_tuple = tuple(values)
-
-        # cursor.execute(query, values_tuple)
-
-        await bot.send_message(message.from_user.id, f"Готово! Счёт '{data['bill_name']}' создан")
+        await bot.send_message(message.from_user.id,
+                               f"Готово! Счёт '{data['bill_name']}' создан")
 
     await common_handlers.to_start(message=message, state=state)
-    
 
-def reg_processes_bill_create(dp:Dispatcher):
+
+def reg_processes_bill_create(dp: Dispatcher):
     dp.register_message_handler(create_fsm_bill, state=None)
     dp.register_message_handler(cancel_create, regexp='Отмена', state='*')
     dp.register_message_handler(write_name, state=FSMCreationBill.bill_name)
-    dp.register_message_handler(write_accbalance, state=FSMCreationBill.acc_balance)
-    dp.register_message_handler(write_isnotcalc, state=FSMCreationBill.is_not_calc)
+    dp.register_message_handler(write_accbalance,
+                                state=FSMCreationBill.acc_balance)
+    dp.register_message_handler(write_isnotcalc,
+                                state=FSMCreationBill.is_not_calc)
