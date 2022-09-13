@@ -18,24 +18,6 @@ kb_action_bill_del = ReplyKeyboardMarkup(resize_keyboard=True,
 kb_action_bill_del.add(but_delete, but_return)
 
 
-# buttons when choosing to view bills
-def generate_bill_btn(bill_list, size_line) -> ReplyKeyboardMarkup:
-
-    kb_bill = ReplyKeyboardMarkup(resize_keyboard=True)
-    kb_bill.row(KeyboardButton('Отмена'))
-
-    bill_list = [KeyboardButton(x) for x in bill_list]
-
-    while len(bill_list) != 0:
-        pice = bill_list[:size_line]
-        for i in pice:
-            button = i
-            kb_bill.row(button)
-        bill_list = bill_list[size_line:]
-
-    return kb_bill
-
-
 but_bill_name = KeyboardButton('Название')
 but_acc_balance = KeyboardButton('Баланс счёта')
 but_is_not_calc = KeyboardButton('Учёт в общем балансе')

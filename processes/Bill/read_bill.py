@@ -1,14 +1,11 @@
 from aiogram import types, Dispatcher
-from loguru import logger
 
 from common_obj import bot
 from keyboards import kb_action_bill
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from database.Postgres import Postgres
 from processes import common_handlers
 from processes.Bill import change_bill
-from keyboards.bill_kb import generate_bill_btn
 from entity.Bill.Bill import Bill
 
 
@@ -18,26 +15,7 @@ class FSMReadingBill(StatesGroup):
 
 
 async def read_fsm_bill(message: types.Message):
-    with Postgres() as (conn, cursor):
-        cursor.execute(f""" SELECT *
-                            FROM bill
-                            where user_id = {message.from_user.id};""")
-
-        result = cursor.fetchall()
-
-    logger.info(f'select from user bills: {result}')
-
-    bills = [x['bill_name'] for x in result]
-
-    if len(bills) > 0:
-        kb_read_bill = generate_bill_btn(bills, 3)
-
-        await FSMReadingBill.bill_name.set()
-        await bot.send_message(message.from_user.id,
-                            'Какой счёт посмотрим?',
-                            reply_markup=kb_read_bill)
-    else:
-        await Bill.create_bill_from_oth_proc(bot=bot, message=message)
+    await Bill.get_all_user_bills(bot, message, FSMReadingBill.bill_name, 'Какой счёт посмотрим?')
 
 async def cancel_read_bill(message: types.Message, state: FSMContext):
     await common_handlers.cancel_process(message=message, state=state)
@@ -45,7 +23,7 @@ async def cancel_read_bill(message: types.Message, state: FSMContext):
 
 async def choose_bill(message: types.Message, state: FSMContext):
 
-    result = await Bill.get_user_bills(message)
+    result = await Bill.get_bill(message)
 
     async with state.proxy() as data:
         data['bill_id'] = result["bill_id"]
@@ -71,7 +49,6 @@ async def choose_action(message: types.Message, state: FSMContext):
         await change_bill.choose_bill(message, state)
 
     elif message.text == 'В начало':
-        await state.finish()
         await common_handlers.to_start(message, state)
 
 

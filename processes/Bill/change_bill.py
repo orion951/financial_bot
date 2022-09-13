@@ -18,46 +18,15 @@ class FSMChangingBill(StatesGroup):
 
 
 async def change_fsm_bill(message: types.Message):
-    with Postgres() as (conn, cursor):
-        cursor.execute(f""" SELECT *
-                            FROM bill
-                            where user_id = {message.from_user.id};""")
+    await Bill.get_all_user_bills(bot, message, FSMChangingBill.bill_name, 'Какой счёт изменим?')
 
-        result = cursor.fetchall()
-
-    logger.info(f'select from user bills: {result}')
-
-    bills = [x['bill_name'] for x in result]
-
-    if len(bills) > 0:
-        kb_change_bill = bill_kb.generate_bill_btn(bills, 3)
-
-        await FSMChangingBill.bill_name.set()
-        await bot.send_message(message.from_user.id,
-                            'Какой счёт изменим?',
-                            reply_markup=kb_change_bill)
-
-    else:
-        await Bill.create_bill_from_oth_proc(bot=bot, message=message)
-
-    
 
 async def cancel_change_bill(message: types.Message, state: FSMContext):
     await common_handlers.cancel_process(message, state)
 
 
 async def choose_bill(message: types.Message, state: FSMContext):
-    with Postgres() as (conn, cursor):
-        cursor.execute(f""" SELECT *
-                            FROM bill
-                            where user_id = {message.from_user.id}
-                            and bill_name = '{message.text}';""")
-
-        bill_info = cursor.fetchall()[0]
-
-    logger.info(f'select bill info: {bill_info}')
-
-    result = await Bill.get_user_bills(message)
+    result = await Bill.get_bill(message)
 
     async with state.proxy() as data:
         data['bill_id'] = result["bill_id"]

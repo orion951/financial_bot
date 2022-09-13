@@ -7,15 +7,14 @@ kb_start = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_start.add(btn_start)
 
 # buttons at choose entity
-but_expenses = KeyboardButton('Расходы')
-but_income = KeyboardButton('Доходы')
+but_acc_change = KeyboardButton('Изменения в балансе')
 but_bills = KeyboardButton('Счета')
 but_kategories = KeyboardButton('Категории')
 but_report = KeyboardButton('Отчет')
 
 kb_client = ReplyKeyboardMarkup(resize_keyboard=True)
 
-kb_client.row(but_expenses, but_income)\
+kb_client.row(but_acc_change)\
          .row(but_bills, but_kategories, but_report)
 
 # buttons at work with entity

@@ -1,11 +1,11 @@
 from entity.Entity import EntityProcess
-from processes.Users.create_user import create_fsm_user
+from processes.AccChange import create_fsm_acc_change
 
 
-class UserProcess(EntityProcess):
+class AccChangeProcess(EntityProcess):
 
     async def create_process(self, message):
-        await create_fsm_user(message)
+        await create_fsm_acc_change(message)
 
     async def read_process(self):
         pass

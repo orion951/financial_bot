@@ -17,24 +17,33 @@ async def create_fsm_user(message: types.Message):
                             FROM users
                             where user_id = {message.from_user.id} ;""")
 
-        result = cursor.fetchall()[0]
-
-    if cursor.rowcount == 0:
-        await FSMCreationUser.user_name.set()
-        await bot.send_message(message.from_user.id,
-                               'Привет! Мы еще не знакомы.\
-                               Как мне тебя называть?')
-    else:
-        await client.start_fsm_action(message, result['user_name'])
+        if cursor.rowcount == 0:
+            await FSMCreationUser.user_name.set()
+            await bot.send_message(message.from_user.id,
+                                'Привет! Мы еще не знакомы.\
+                                Как мне тебя называть?')
+        else:
+            result = cursor.fetchall()[0]
+            await client.start_fsm_action(message, result['user_name'])
 
 
 async def set_name(message: types.Message, state: FSMContext):
+    categories = ['Продукты', 'Одежда', 'Транспорт', 'Вкусняшки', 'Квартира', 'Другое']
 
     with Postgres() as (conn, cursor):
-        db.insert('bill', {'user_id': message.from_user.id,
+        db.insert('users', {'user_id': message.from_user.id,
                            'telegram_name': message.from_user.full_name,
                            'user_name': message.text},
                   cursor=cursor, conn=conn)
+
+        for cat in categories:
+            cat_id = categories.index(cat) + 1
+            db.insert('category', {'cat_id': cat_id,
+                                   'cat_name': cat,
+                                   'user_id': message.from_user.id},
+                  cursor=cursor, conn=conn)
+
+    
 
     await state.finish()
     await client.start_fsm_action(message, message.text)

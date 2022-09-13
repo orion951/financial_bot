@@ -7,7 +7,6 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from database.Postgres import Postgres
 from processes import common_handlers
-from keyboards.bill_kb import generate_bill_btn
 from entity.Bill.Bill import Bill
 
 
@@ -17,25 +16,7 @@ class FSMDeletingBill(StatesGroup):
 
 
 async def delete_fsm_bill(message: types.Message):
-    with Postgres() as (conn, cursor):
-        cursor.execute(f""" SELECT *
-                            FROM bill
-                            where user_id = {message.from_user.id};""")
-
-        result = cursor.fetchall()
-
-    logger.info(f'select from user bills: {result}')
-
-    bills = [x['bill_name'] for x in result]
-    if len(bills) > 0:
-        kb_read_bill = generate_bill_btn(bills, 3)
-        
-        await FSMDeletingBill.bill_name.set()
-        await bot.send_message(message.from_user.id,
-                            'Какой счёт удалим?',
-                            reply_markup=kb_read_bill)
-    else:
-        await Bill.create_bill_from_oth_proc(bot=bot, message=message)
+    await Bill.get_all_user_bills(bot, message, FSMDeletingBill.bill_name, 'Какой счёт удалим?')
 
 
 async def cancel_delete_bill(message: types.Message, state: FSMContext):

@@ -1,9 +1,10 @@
 from aiogram import types
-
+from aiogram.dispatcher import FSMContext
 from loguru import logger
 
 from database import Postgres
 from processes.Bill import create_bill
+from keyboards.common_kb import generate_entity_btn
 
 class Bill():
 
@@ -30,7 +31,7 @@ class Bill():
         return {'cancel': cancel, 'bill_id': bill_id}
 
     @staticmethod
-    async def get_user_bills(message: types.Message):
+    async def get_bill(message: types.Message):
         with Postgres() as (conn, cursor):
             cursor.execute(f""" SELECT *
                                 FROM bill
@@ -55,9 +56,32 @@ class Bill():
                 'is_calc': is_calc}
 
     @staticmethod
-    async def create_bill_from_oth_proc(bot, message):
+    async def create_bill_from_oth_proc(bot, message: types.Message):
         await bot.send_message(message.from_user.id,
                                ' '.join('''Пока нет доступных счетов(. 
                                            Давайте создадим, 
                                            а потом делайте с ним что хотите'''.split()))
         await create_bill.create_fsm_bill(message)
+
+    @staticmethod
+    async def get_all_user_bills(bot, message: types.Message, state, text: str):
+        with Postgres() as (conn, cursor):
+            cursor.execute(f""" SELECT *
+                                FROM bill
+                                WHERE user_id = {message.from_user.id};""")
+
+            result = cursor.fetchall()
+
+        logger.info(f'Select from user bills: {result}')
+
+        bills = [x['bill_name'] for x in result]
+
+        if len(bills) > 0:
+            kb_read_bill = generate_entity_btn(bills, 3)
+
+            await state.set()
+            await bot.send_message(message.from_user.id,
+                                   text,
+                                   reply_markup=kb_read_bill)
+        else:
+            await Bill.create_bill_from_oth_proc(bot, message)

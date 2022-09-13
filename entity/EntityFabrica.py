@@ -1,6 +1,6 @@
 from entity.Bill.BillProcess import BillProcess
-from entity.Acc_change import Acc_changeProcess
-from entity.Category import CategoryProcess
+from entity.AccChange.AccChangeProcess import AccChangeProcess
+from entity.Category.CategoryProcess import CategoryProcess
 from entity.Entity import EntityProcess
 
 
@@ -12,8 +12,8 @@ class EntityFabrica():
     async def create_object(cls, entity) -> EntityProcess:
         if entity == 'Счета':
             cls.object = BillProcess()
-        elif entity == 'Расходы' or entity == 'Доходы':
-            cls.object = Acc_changeProcess()
+        elif entity == 'Изменения в балансе':
+            cls.object = AccChangeProcess()
         elif entity == 'Категории':
             cls.object = CategoryProcess()
 
