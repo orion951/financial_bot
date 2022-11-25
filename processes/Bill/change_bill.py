@@ -31,7 +31,7 @@ async def choose_bill(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['bill_id'] = result["bill_id"]
         data['bill_name'] = result["bill_name"]
-        data['acc_balance'] = result["acc_balance"]
+        data['acc_balance'] = float(result["acc_balance"] / 100)
         data['is_calc'] = result["is_calc"]
 
     await FSMChangingBill.next()
@@ -98,9 +98,9 @@ async def choose_action(message: types.Message, state: FSMContext):
             await FSMChangingBill.param.set()
             await bot.send_message(message.from_user.id,
                                    f"""Название: {data["bill_name"]}
-                                       Баланс: {data["acc_balance"]}
+                                       Баланс: {data["acc_balance"]:.2f}
                                        {data["is_calc"]}\n
-                                       Что будем менять?""".replace("  ", ""),
+                                       Что будем менять?""".replace("  ", "").replace("\n ", "\n"),
                                    reply_markup=bill_kb.kb_params_bill)
     elif message.text == 'Изменить другой счёт':
         await state.finish()

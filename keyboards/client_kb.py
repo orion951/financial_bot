@@ -10,12 +10,12 @@ kb_start.add(btn_start)
 but_acc_change = KeyboardButton('Изменения в балансе')
 but_bills = KeyboardButton('Счета')
 but_kategories = KeyboardButton('Категории')
-but_report = KeyboardButton('Отчет')
+# but_report = KeyboardButton('Отчет')
 
 kb_client = ReplyKeyboardMarkup(resize_keyboard=True)
 
 kb_client.row(but_acc_change)\
-         .row(but_bills, but_kategories, but_report)
+         .row(but_bills, but_kategories)
 
 # buttons at work with entity
 but_create = KeyboardButton('Создать')

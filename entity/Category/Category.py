@@ -32,7 +32,7 @@ class Category():
         cat_id = 0
 
         for row in result:
-            if row['cat_id'] == message.from_user.id and cat_id < row['cat_id']:
+            if row['user_id'] == message.from_user.id and cat_id < row['cat_id']:
                 cat_id = row['cat_id']
             if row['cat_name'] == message.text:
                 cancel = True

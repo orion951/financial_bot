@@ -3,8 +3,11 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from loguru import logger
+import datetime
+from aiogram_calendar import dialog_cal_callback, DialogCalendar
+from decimal import Decimal
 
-from common_obj import bot
+from common_obj import bot, dp
 from database import Postgres, db
 from processes import common_handlers
 from keyboards import common_kb, acc_change_kb
@@ -13,6 +16,8 @@ from entity.Category.Category import Category
 
 
 class FSMCreationAccChange(StatesGroup):
+    date_selection = State()
+    date_create = State()
     type = State()
     bill = State()
     category = State()
@@ -20,12 +25,43 @@ class FSMCreationAccChange(StatesGroup):
     action = State()
 
 async def create_fsm_acc_change(message: types.Message):
-    await FSMCreationAccChange.type.set()
+    await FSMCreationAccChange.date_selection.set()
+    await message.answer("Выбери дату:", reply_markup=acc_change_kb.kb_date)
 
-    await bot.send_message(message.from_user.id, 'Что будем вносить?', reply_markup=acc_change_kb.kb_acc_change)
 
 async def cancel_create(message: types.Message, state: FSMContext):
     await common_handlers.cancel_process(message=message, state=state)
+
+
+async def choose_date(message: types.Message, state: FSMContext):
+    logger.info('in method "choose_date"')
+    if message.text == 'Сегодня':
+        await FSMCreationAccChange.type.set()
+        async with state.proxy() as data:
+            data['date'] = datetime.date.today()
+        await bot.send_message(message.from_user.id, 'Что будем вносить?', reply_markup=acc_change_kb.kb_acc_change)
+
+    elif message.text == 'Вчера':
+        await FSMCreationAccChange.type.set()
+        async with state.proxy() as data:
+            data['date'] = datetime.date.today() - datetime.timedelta(days=1)
+        await bot.send_message(message.from_user.id, 'Что будем вносить?', reply_markup=acc_change_kb.kb_acc_change)
+
+    else:
+        await FSMCreationAccChange.date_create.set()
+        await message.answer("Выбери дату:", reply_markup=await DialogCalendar().start_calendar())
+
+
+# dialog calendar usage
+@dp.callback_query_handler(dialog_cal_callback.filter(), state=FSMCreationAccChange.date_create)
+async def process_dialog_calendar(callback_query: types.CallbackQuery, callback_data: dict, state: FSMContext):
+    selected, date = await DialogCalendar().process_selection(callback_query, callback_data)
+    if selected:
+        await FSMCreationAccChange.type.set()
+        # state = Dispatcher.get_current().current_state()
+        async with state.proxy() as data:
+            data['date'] = date
+            await callback_query.message.answer('Что будем вносить?', reply_markup=acc_change_kb.kb_acc_change)
 
 
 async def set_type(message: types.Message, state: FSMContext):
@@ -93,14 +129,21 @@ async def set_amount(message: types.Message, state: FSMContext):
                                  'cat_id': data['cat_id'],
                                  'bill_id': data['bill_id'],
                                  'user_id': message.from_user.id,
-                                 'type': data['type']},
+                                 'type': data['type'],
+                                 'record_date': data['date'].strftime("%Y-%m-%d")},
                   cursor=cursor, conn=conn)
 
-    await bot.send_message(message.from_user.id,
-                           f"""Готово!\n{data['type_name']}:\n\n{int(float(message.text) * 100)} 
-                           со счёта '{data['bill_name']}' 
-                           в категории '{data['cat_name']}' """.replace("  ", ""))
+    date_for_user = data["date"].strftime("%d.%m.%Y")
 
+    await bot.send_message(message.from_user.id,
+                           f"""Готово!\n\nДата: {date_for_user}
+                           {data['type_name']}: {float(message.text):.2f} 
+                           со счёта '{data['bill_name']}' 
+                           в категории '{data['cat_name']}'
+                           """
+                           .replace("  ", "").replace("\n ", "\n"))
+    
+    await FSMCreationAccChange.action.set()
     await bot.send_message(message.from_user.id, 'Что дальше?', reply_markup=acc_change_kb.kb_end_acc_change)
 
 
@@ -109,6 +152,11 @@ async def choose_action(message: types.Message, state: FSMContext):
     if message.text == 'Расход' or message.text == 'Доход':
         await FSMCreationAccChange.type.set()
         await set_type(message, state)
+
+    elif message.text == 'Другая дата':
+        await state.finish()
+        await create_fsm_acc_change(message)
+
     elif message.text == 'В начало':
         await state.finish()
         await common_handlers.to_start(message, state)
@@ -116,6 +164,7 @@ async def choose_action(message: types.Message, state: FSMContext):
 def reg_processes_acc_change_create(dp: Dispatcher):
     dp.register_message_handler(create_fsm_acc_change, state=None)
     dp.register_message_handler(cancel_create, regexp='Отмена', state='*')
+    dp.register_message_handler(choose_date, state=FSMCreationAccChange.date_selection)
     dp.register_message_handler(set_type, state=FSMCreationAccChange.type)
     dp.register_message_handler(set_bill, state=FSMCreationAccChange.bill)
     dp.register_message_handler(set_category, state=FSMCreationAccChange.category)

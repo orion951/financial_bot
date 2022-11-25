@@ -28,13 +28,13 @@ async def choose_bill(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['bill_id'] = result["bill_id"]
         data['bill_name'] = result["bill_name"]
-        data['acc_balance'] = result["acc_balance"]
+        data['acc_balance'] = float(result["acc_balance"] / 100)
         data['is_calc'] = result["is_calc"]
 
     await FSMReadingBill.next()
     await bot.send_message(message.from_user.id,
                            (f"""Название: {result["bill_name"]}
-                            Баланс: {result["acc_balance"]}
+                            Баланс: {result["acc_balance"]:.2f}
                             {result["is_calc"]}""".replace("  ", "")),
                            reply_markup=kb_action_bill)
 
