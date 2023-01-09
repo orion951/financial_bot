@@ -9,7 +9,7 @@ async def start(message: types.Message):
     await user.create_process(message)
 
 
-async def random_message(message: types.Message):
+async def handle_random_message(message: types.Message):
     await bot.send_message(message.from_user.id,
                            'Для работы с ботом нажми Старт',
                            reply_markup=kb_start)
@@ -17,4 +17,4 @@ async def random_message(message: types.Message):
 
 def reg_handlers_client(dp: Dispatcher):
     dp.register_message_handler(start, regexp='Старт')
-    dp.register_message_handler(random_message)
+    dp.register_message_handler(handle_random_message)

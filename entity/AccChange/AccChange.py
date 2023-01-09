@@ -3,10 +3,9 @@ from aiogram.dispatcher import FSMContext
 from loguru import logger
 
 from database import Postgres
-from processes.AccChange import ( show_fsm_acc_change, 
-                                 change_fsm_acc_change, 
-                                 change_fsm_acc_change, 
-                                 delete_fsm_acc_change )
+from processes.AccChange import ( read_fsm_acc_change, 
+                                  change_fsm_acc_change, 
+                                  delete_fsm_acc_change )
 from processes import common_handlers
 
 
@@ -21,7 +20,7 @@ class AccChange():
         state.finish()
     
         if 'Посмотреть' in message.text:
-            await show_fsm_acc_change(message)
+            await read_fsm_acc_change(message)
 
         elif 'Изменить' in message.text:
             await change_fsm_acc_change(message)
