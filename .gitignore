@@ -1,4 +1,5 @@
 test.py
 config.py
-.venv/
+.venv
 .env
+venv/
